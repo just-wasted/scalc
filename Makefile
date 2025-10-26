@@ -4,4 +4,4 @@ SOURCE_FILE=scalc.c
 OUT_FILE=scalc
 
 all:
-	$(CC) $(SOURCE_FILE) -o $(OUT_FILE) $(CFLAGS)
+	$(CC) ./src/$(SOURCE_FILE) -o ./build-debug/$(OUT_FILE) $(CFLAGS)
