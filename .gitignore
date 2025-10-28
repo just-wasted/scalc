@@ -2,7 +2,6 @@
 !.gitignore
 !Makefile
 !src
-!compile_commands.json
 !.clang-format
 !.editorconfig
 !LICENSE
