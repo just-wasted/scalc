@@ -1,18 +1,16 @@
 #include "scalc.h"
+#include <ctype.h>
 #include <readline/history.h>
 #include <readline/readline.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 // handles SIGINT ctrl+c while in main loop
 static void catch_sigint(int signal)
 {
     usr_signal = signal;
-}
-
-void parse_usr_input()
-{
-    // do shit
 }
 
 int main(void)
@@ -33,7 +31,7 @@ int main(void)
         {
             break;
         }
-        printf("%s\n", usr_input);
+        parse_usr_input(usr_input);
     }
 
     free(prompt);
@@ -54,7 +52,8 @@ char *get_input(char *prompt)
             break;
         }
         usr_input = readline(prompt);
-    } while (usr_input == NULL);
+    } while (usr_input == NULL ||
+             *usr_input == '\0'); // avoid adding empty strings to history
 
     add_history(usr_input);
     return usr_input;
@@ -65,4 +64,33 @@ void format_prompt(char *prompt)
     // write PROMPT_SIZE bytes to prompt string including \0
     snprintf(prompt, PROMPT_SIZE, "%s%s >>>%s ", MODE_STRING[current_mode],
              MODE_COLOR[current_mode], RESET_ATTRIBUTES);
+}
+
+void parse_usr_input(char *str)
+{
+    char *token = NULL;
+    token = strtok(str, " +-/=^%");
+
+    bool flag_parse_for_cmd = true;
+
+    if (strlen(token) == COMMAND_LEN)
+    {
+        for (int i = 0; i < COMMAND_LEN; i++)
+        {
+            if (!isalpha(str[i]))
+            {
+                flag_parse_for_cmd = false;
+            }
+        }
+        if (flag_parse_for_cmd)
+        {
+            parse_command(token);
+        }
+    }
+}
+
+void parse_command(char *str)
+{
+    printf("Unknown Command: %s\n", str);
+    printf("Type 'help' to display help text.\n");
 }
