@@ -1,32 +1,68 @@
 #include "scalc.h"
+#include <readline/history.h>
+#include <readline/readline.h>
+#include <signal.h>
+#include <stdlib.h>
+
+// handles SIGINT ctrl+c while in main loop
+static void catch_sigint(int signal)
+{
+    usr_signal = signal;
+}
+
+void parse_usr_input()
+{
+    // do shit
+}
 
 int main(void)
 {
-    enum CALC_MODE cur_mode = CALC;
+    signal(SIGINT, catch_sigint);
+    current_mode = CALC;
 
-    char input_str[INPUT_BUFFER_SIZE];
-    get_input(input_str, cur_mode);
-    printf("%s\n", input_str);
-    return 0;
-}
+    // change readline's getc function pointer to avoid readline blocking
+    // if user sends SIGINT
+    rl_getc_function = getc;
 
-void get_input(char *buffer, enum CALC_MODE mode)
-{
-    // int valid_input = 0;
-    print_prompt(mode);
+    char *prompt = malloc(sizeof(char) * PROMPT_SIZE);
 
-    while (fgets(buffer, sizeof(char) * INPUT_BUFFER_SIZE, stdin) == NULL)
+    while (usr_signal != SIGINT)
     {
-        printf("Input Error!\n");
-        print_prompt(mode);
-        printf("%ld\n", strlen(buffer));
+        char *usr_input = get_input(prompt);
+        if (usr_signal == SIGINT)
+        {
+            break;
+        }
+        printf("%s\n", usr_input);
     }
+
+    free(prompt);
+    clear_history();
+    printf("User Exit\n");
+    return EXIT_SUCCESS;
 }
 
-void print_prompt(enum CALC_MODE mode)
+char *get_input(char *prompt)
 {
-    printf("%s ", MODE_STRING[mode]);
-    printf("%s", FORGROUND_CYAN);
-    printf(">>> ");
-    printf("%s", RESET_ATTRIBUTES);
+    char *usr_input = NULL;
+    format_prompt(prompt);
+
+    do
+    {
+        if (usr_signal == SIGINT)
+        {
+            break;
+        }
+        usr_input = readline(prompt);
+    } while (usr_input == NULL);
+
+    add_history(usr_input);
+    return usr_input;
+}
+
+void format_prompt(char *prompt)
+{
+    // write PROMPT_SIZE bytes to prompt string including \0
+    snprintf(prompt, PROMPT_SIZE, "%s%s >>>%s ", MODE_STRING[current_mode],
+             MODE_COLOR[current_mode], RESET_ATTRIBUTES);
 }

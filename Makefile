@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror -g -O0
+CFLAGS = -Wall -Wextra -Werror -g -O0 -lreadline
 SRC_DIR = src
 BUILD_DIR = build-debug
 
@@ -15,8 +15,8 @@ all: $(BUILD_DIR)/$(OUT_FILE)
 $(BUILD_DIR)/$(OUT_FILE): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $@
 
-# Compile step: each .c -> .o file
-# -MMD: generate dependency files
+# Compile step: each .c to .o file
+# -MMD: generate dependency files to check for changed header files
 # -MP: add empty dummy rules to avoid errors if headers are missing
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
@@ -26,8 +26,12 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir -p $@
 
-# Clean up
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: all clean
+# (re-)generate compile_commands.json for clangd-LSP
+refresh:
+	rm -rf $(BUILD_DIR)
+	bear -- make
+
+.PHONY: all clean refresh
